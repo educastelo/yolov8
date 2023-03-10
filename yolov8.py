@@ -33,7 +33,7 @@ while True:
     for result in results:
         detections = []
         for r in result.boxes.data.tolist():
-            # extract the bouding box coordinates, confidence and class of each object
+            # extract the bounding box coordinates, confidence and class of each object
             x1, x2, x3, x4, score, class_id = r
             x1 = int(x1)
             x2 = int(x2)
