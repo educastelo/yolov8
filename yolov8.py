@@ -7,12 +7,12 @@ from ultralytics import YOLO
 from utilities.utils import point_in_polygons, draw_roi
 
 # setting the ROI (polygon) of the frame and loading the video stream
-points_polygon = [[[317, 281], [294, 571], [1358, 535], [859, 283], [320, 281]],[[1625, 529], [2299, 791], [2342, 704], [1824, 494], [1623, 529]]]
-stream = u"rtmp://rtmp01.datavisiooh.com:1935/cartel_DN5502A"
+points_polygon = [[[309, 338], [1115, 678], [1173, 3], [554, 1], [308, 339]]]
+stream = u'rtsp://..'
 cap = cv2.VideoCapture(stream)
 
 # load the model and the COCO class labels our YOLO model was trained on
-model = YOLO("models/yolov8x.pt")
+model = YOLO("models/yolov8m.pt")
 labelsPath = os.path.sep.join(["coco", "coco.names"])
 LABELS = open(labelsPath).read().strip().split("\n")
 
@@ -29,7 +29,6 @@ while True:
     ret, frame = cap.read()
 
     start = time.time()
-
     # pass the frame to the yolov8 detector
     results = model(source=frame, verbose=False)
     end = time.time()
@@ -46,7 +45,7 @@ while True:
             x4 = int(x4)
             class_id = int(class_id)
 
-            if LABELS[class_id] not in ["person", "car", "motorbike", "bicycle", "truck"]:
+            if LABELS[class_id] not in ["person", "car", "motorbike", "bicycle", "truck", "bus"]:
                 continue
 
             # Check if the centroid of each object is inside the polygon
@@ -76,7 +75,7 @@ while True:
     # # save the video with detections
     # if writer is None:
     #     fourcc = cv2.VideoWriter_fourcc(*"XVID")
-    #     writer = cv2.VideoWriter('cartel_DN5002A.avi', fourcc, 15, (frame.shape[1], frame.shape[0]), True)
+    #     writer = cv2.VideoWriter('yolov8.avi', fourcc, 15, (frame.shape[1], frame.shape[0]), True)
     # writer.write(output_frame)
 
     # show the output
@@ -84,7 +83,7 @@ while True:
     key = cv2.waitKey(1) & 0xFF
 
     if key == ord('k'):
-        cv2.imwrite("obelisco.jpg", frame)
+        cv2.imwrite("screenshot.jpg", frame)
 
     # stop the frame
     if key == ord('q'):

@@ -8,9 +8,8 @@ from utilities.utils import point_in_polygons, draw_roi
 from tracker.centroid import CentroidTracker
 
 # setting the ROI (polygon) of the frame and loading the video stream
-points_polygon = [[[2308, 1429], [1555, 1429], [1307, 610], [1723, 633], [2310, 1427]]]
-stream = u'rtmp://rtmp01.datavisiooh.com:1935/cartel_VER5001A'
-cap = cv2.VideoCapture(stream)
+points_polygon = [[[2176, 1437], [1363, 390], [921, 654], [917, 1435], [2173, 1435]]]
+stream = u'rtmp://.....'
 
 # instantiate our centroid tracker, then initialize a list to store
 # each of our dlib correlation trackers, followed by a dictionary to
@@ -20,7 +19,7 @@ trackers = []
 trackableObjects = {}
 
 # load the model and the COCO class labels our YOLO model was trained on
-model = YOLO("models/yolov8s.pt")
+model = YOLO("models/yolov8m.pt")
 labelsPath = os.path.sep.join(["coco", "coco.names"])
 LABELS = open(labelsPath).read().strip().split("\n")
 
@@ -34,82 +33,73 @@ writer = None
 confidenceLevel = 0.1
 threshold = 0.3
 
-while True:
-    ret, frame = cap.read()
 
-    start = time.time()
+def main():
+    writer = None
+    # Stream is online, so proceed with reading the frames
+    for result in model(source=stream, verbose=False, max_det=200, stream=True, show=False,
+                        conf=0.2, agnostic_nms=True, classes=[0, 1, 2, 3, 5, 7]):
+        frame = result.orig_img
+        boxes = result.boxes
+        rects = []
+        classDetected_list = []
+        confDegree_list = []
 
-    # pass the frame to the yolov8 detector
-    results = model(source=frame, verbose=False)
-    end = time.time()
-    print("[INFO] classification time " + str((end - start) * 1000) + "ms")
-
-    for result in results:
-        detections = []
-        for r in result.boxes.data.tolist():
-            # extract the bounding box coordinates, confidence and class of each object
-            x1, x2, x3, x4, confidence, class_id = r
-            x1 = int(x1)
-            x2 = int(x2)
-            x3 = int(x3)
-            x4 = int(x4)
-            class_id = int(class_id)
+        for r in boxes:
+            # Extract the bounding box coordinates, confidence, and class of each object
+            x1, x2, x3, x4 = map(int, r.xyxy[0])
+            class_id = int(r.cls[0])
+            score = float(r.conf[0])
 
             # Check if the centroid of each object is inside the polygon
             cX = (x1 + x3) / 2
             cY = (x2 + x4) / 2
-
-            test_polygon = point_in_polygons((cX, cY), points_polygon)
-            if not test_polygon:
-                continue
-
-            # filter out weak predictions by ensuring the detected
-            # probability is greater than the minimum probability
-            if confidence < confidenceLevel:
-                continue
-
-
-            if LABELS[class_id] not in ["person", "car", "motorbike", "bus", "bicycle", "truck"]:
+            if not point_in_polygons((cX, cY), points_polygon):
                 continue
 
             # draw a bounding box rectangle and label on the frame
             color = [int(c) for c in COLORS[class_id]]
             cv2.rectangle(frame, (x1, x2), (x3, x4), color, 2)
-            text = "{}: {:.4f}".format(LABELS[class_id],  ################
-                                       confidence)
+            text = "{}: {:.4f}".format(LABELS[class_id],
+                                       score)
             cv2.putText(frame, text, (x1, x2 - 5),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
 
-            # update our centroid tracker using the computed set of bounding
-            # box rectangles
-            objects = ct.update([x1, x2, x3, x4], LABELS[class_id], confidence)
+            rects.append([x1, x2, x3, x4])
+            classDetected_list.append(LABELS[class_id])
+            confDegree_list.append(score)
 
-            # loop over the tracked objects
-            for (objectID, centroid) in objects.items():
-                # draw both the ID of the object and the centroid of the
-                # object on the output frame
-                text = f"ID {objectID}"
-                cv2.putText(frame, text, (centroid[0] - 10, centroid[1] - 10),  #############
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-                cv2.circle(frame, (centroid[0], centroid[1]), 4, (0, 255, 0), - 1)
+        # update our centroid tracker using the computed set of bounding
+        # box rectangles
+        objects = ct.update(rects, classDetected_list, confDegree_list)
 
-    ## save the video with detections
-    # if writer is None:
-    #     fourcc = cv2.VideoWriter_fourcc(*"XVID")
-    #     writer = cv2.VideoWriter('traffic-yolov8.avi', fourcc, 30, (frame.shape[1], frame.shape[0]), True)
-    # writer.write(frame)
+        # loop over the tracked objects
+        for (objectID, centroid) in objects.items():
+            # draw both the ID of the object and the centroid of the
+            # object on the output frame
+            text = f"ID {objectID}"
+            cv2.putText(frame, text, (centroid[0] - 10, centroid[1] - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+            cv2.circle(frame, (centroid[0], centroid[1]), 4, (0, 255, 0), - 1)
 
-    # draw roi
-    output_frame = draw_roi(frame, points_polygon)
-    resized = imutils.resize(output_frame, width=1200)
+        # # save the video with detections
+        # if writer is None:
+        #     fourcc = cv2.VideoWriter_fourcc(*"XVID")
+        #     writer = cv2.VideoWriter('yolov8-tracking.avi', fourcc, 15, (frame.shape[1], frame.shape[0]), True)
+        # writer.write(frame)
 
-    # show the output
-    cv2.imshow('Frame', resized)
-    key = cv2.waitKey(1) & 0xFF
+        # draw roi
+        output_frame = draw_roi(frame, points_polygon)
+        resized = imutils.resize(output_frame, width=1200)
 
-    # stop the frame
-    if key == ord('q'):
-        break
+        # show the output
+        cv2.imshow('Frame', resized)
+        key = cv2.waitKey(1) & 0xFF
 
-cap.release()
-cv2.destroyAllWindows()
+        # stop the frame
+        if key == ord('q'):
+            exit(1)
+
+
+if __name__ == '__main__':
+    main()
