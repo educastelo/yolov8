@@ -28,13 +28,14 @@ while True:
 
     fps, frame = fpsReader.update(frame, pos=(50, 80), color=(0, 255, 0), scale=5, thickness=5)
 
-    start = time.time()
+    # start = time.time()
     # pass the frame to the yolov8 detector
-    results = model(source=frame, verbose=False, max_det=200, stream=True, show=False,
+    results = model(source=frame, verbose=True, max_det=200, stream=True, show=False,
                     conf=0.3, agnostic_nms=True, classes=[0, 1, 2, 3, 5, 7])
-    end = time.time()
+    # end = time.time()
+    # tempo_total = (end - start) * 1000
     print(f"FPS Stream 3: {fps}")
-    print("[INFO] classification time stream 3: " + str((end - start) * 1000) + "ms")
+    # print(f"[INFO] classification time stream 3: {tempo_total} ms")
 
     for result in results:
         detections = []
