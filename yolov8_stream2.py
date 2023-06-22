@@ -33,8 +33,8 @@ while True:
     results = model(source=frame, verbose=False, max_det=200, stream=True, show=False,
                     conf=0.3, agnostic_nms=True, classes=[0, 1, 2, 3, 5, 7])
     end = time.time()
-    print(f"Stream 2: {fps}")
-    print("[INFO] classification time stream 2" + str((end - start) * 1000) + "ms")
+    print(f"FPS Stream 2: {fps}")
+    print("[INFO] classification time stream 2: " + str((end - start) * 1000) + "ms")
 
     for result in results:
         detections = []
