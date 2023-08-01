@@ -20,9 +20,9 @@ def draw_roi(frame, polygons):
         cv2.fillPoly(
             frame_overlay,
             np.array([polygon], dtype=np.int32),
-            (0, 127, 127)
+            (0, 0, 255)
         )
 
-    alpha = 0.3
+    alpha = 0.2
     output_frame = cv2.addWeighted(frame_overlay, alpha, frame, 1 - alpha, 0)
     return output_frame

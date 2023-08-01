@@ -10,7 +10,7 @@ from tracker.centroid import CentroidTracker
 
 # setting the ROI (polygon) of the frame and loading the video stream
 points_polygon = [[[352, 260], [1110, 524], [998, 717], [167, 716], [348, 258]]]
-stream = 'rtmp://rtmp01.datavisiooh.com:1935/calles01'
+stream = 'rtmp://rtmp....'
 
 # instantiate our centroid tracker, then initialize a list to store
 # each of our dlib correlation trackers, followed by a dictionary to
@@ -85,7 +85,7 @@ def main():
         # save the video with detections
         if writer is None:
             fourcc = cv2.VideoWriter_fourcc(*"XVID")
-            writer = cv2.VideoWriter('THE_LED-Hacia_Atlapa.avi', fourcc, 10, (frame.shape[1], frame.shape[0]), True)
+            writer = cv2.VideoWriter('yolov8....avi', fourcc, 10, (frame.shape[1], frame.shape[0]), True)
         writer.write(output_frame)
 
         # show the output

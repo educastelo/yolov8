@@ -9,7 +9,7 @@ from utilities.utils import point_in_polygons, draw_roi
 
 # setting the ROI (polygon) of the frame and loading the video stream
 points_polygon = [[[1235, 785], [556, 836], [554, 616], [1109, 599], [1237, 785]]]
-stream = 'rtmp://rtmp03.datavisiooh.com:1935/cartel_SDO5001A'
+stream = '....'
 cap = cv2.VideoCapture(stream)
 fpsReader = cvzone.FPS()
 
@@ -31,7 +31,7 @@ while True:
     print(fps)
 
     start = time.time()
-    # pass the frame to the yolov8 detector
+    # pass the frame to the yolov8 model
     results = model(source=frame, verbose=False, max_det=200, stream=True, show=False,
                     conf=0.3, agnostic_nms=True, classes=[0, 1, 2, 3, 5, 7])
     end = time.time()
