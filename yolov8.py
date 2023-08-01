@@ -20,7 +20,7 @@ LABELS = open(labelsPath).read().strip().split("\n")
 np.random.seed(42)
 COLORS = np.random.randint(0, 255, size=(len(LABELS), 3),
                            dtype="uint8")
-writer = None
+
 
 
 def main():
