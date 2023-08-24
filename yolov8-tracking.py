@@ -1,33 +1,27 @@
 import os
-import time
 import cv2
 import imutils
-import numpy as np
 import cvzone
 from ultralytics import YOLO
 from utilities.utils import point_in_polygons, draw_roi
 from tracker.centroid import CentroidTracker
 
 # setting the ROI (polygon) of the frame and loading the video stream
-points_polygon = [[[352, 260], [1110, 524], [998, 717], [167, 716], [348, 258]]]
-stream = 'rtmp://rtmp....'
+points_polygon = [[[494, 244], [733, 716], [1275, 294], [926, 108], [498, 242]]]
+stream = u"rtmp://"
 
 # instantiate our centroid tracker, then initialize a list to store
 # each of our dlib correlation trackers, followed by a dictionary to
 # map each unique object ID to a TrackableObject
-ct = CentroidTracker(maxDisappeared=1, maxDistance=400)
+ct = CentroidTracker(maxDisappeared=2, maxDistance=400)
 trackers = []
 trackableObjects = {}
 
 # load the model and the COCO class labels our YOLO model was trained on
-model = YOLO("models/yolov8m.pt")
+model = YOLO("models/yolov8x.pt")  # escolher o modelo de acordo com a necessidade
 labelsPath = os.path.sep.join(["coco", "coco.names"])
 LABELS = open(labelsPath).read().strip().split("\n")
 
-# initialize a list of colors to represent each possible class label
-np.random.seed(42)
-COLORS = np.random.randint(0, 255, size=(len(LABELS), 3),
-                           dtype="uint8")
 writer = None
 
 
@@ -46,6 +40,7 @@ def main():
             x1, x2, x3, x4 = map(int, r.xyxy[0])
             class_id = int(r.cls[0])
             score = float(r.conf[0])
+            w, h = x3 - x1, x4 - x2
 
             # Check if the centroid of each object is inside the polygon
             cX = (x1 + x3) / 2
@@ -54,12 +49,14 @@ def main():
                 continue
 
             # draw a bounding box rectangle and label on the frame
-            color = [int(c) for c in COLORS[class_id]]
-            cv2.rectangle(frame, (x1, x2), (x3, x4), color, 2)
-            text = "{}: {:.4f}".format(LABELS[class_id],
-                                       score)
-            cv2.putText(frame, text, (x1, x2 - 5),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
+            cvzone.cornerRect(frame, (x1, x2, w, h), l=10, t=4)
+            cvzone.putTextRect(frame,
+                               f'{LABELS[int(class_id)]}',
+                               (max(0, x1), max(35, x2)),
+                               scale=0.5, thickness=1, colorR=(224, 182, 90),
+                               colorT=(40, 40, 40),
+                               font=cv2.FONT_HERSHEY_DUPLEX,
+                               offset=5)
 
             rects.append([x1, x2, x3, x4])
             classDetected_list.append(LABELS[class_id])
@@ -82,11 +79,11 @@ def main():
         output_frame = draw_roi(frame, points_polygon)
         resized = imutils.resize(output_frame, width=1200)
 
-        # save the video with detections
-        if writer is None:
-            fourcc = cv2.VideoWriter_fourcc(*"XVID")
-            writer = cv2.VideoWriter('yolov8....avi', fourcc, 10, (frame.shape[1], frame.shape[0]), True)
-        writer.write(output_frame)
+        # # save the video with detections
+        # if writer is None:
+        #     fourcc = cv2.VideoWriter_fourcc(*"XVID")
+        #     writer = cv2.VideoWriter('yolov8.avi', fourcc, 10, (frame.shape[1], frame.shape[0]), True)
+        # writer.write(output_frame)
 
         # show the output
         cv2.imshow('Frame', resized)
@@ -94,7 +91,7 @@ def main():
 
         # stop the frame
         if key == ord('q'):
-            exit(1)
+            break
 
 
 if __name__ == '__main__':

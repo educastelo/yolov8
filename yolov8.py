@@ -1,18 +1,17 @@
 import os
 import time
 import cv2
-import imutils
 import numpy as np
 import cvzone
 from ultralytics import YOLO
 from utilities.utils import point_in_polygons, draw_roi
 
 # setting the ROI (polygon) of the frame and loading the video stream
-points_polygon = [[[784, 713], [804, 403], [578, 404], [15, 492], [9, 710], [781, 715]]]
-stream = u'......avi'
+points_polygon = [[[247, 298], [201, 679], [1112, 679], [1020, 294], [248, 296]]]
+stream = u'rtsp...'
 
 # load the model and the COCO class labels our YOLO model was trained on
-model = YOLO("models/yolov8x.pt")
+model = YOLO("models/yolov8m.pt")
 labelsPath = os.path.sep.join(["coco", "coco.names"])
 LABELS = open(labelsPath).read().strip().split("\n")
 
@@ -20,7 +19,6 @@ LABELS = open(labelsPath).read().strip().split("\n")
 np.random.seed(42)
 COLORS = np.random.randint(0, 255, size=(len(LABELS), 3),
                            dtype="uint8")
-
 
 
 def main():
@@ -46,10 +44,7 @@ def main():
             if not point_in_polygons((cX, cY), points_polygon):
                 continue
 
-            # if class_id == 0:
-            #     LABELS[int(class_id)] = 'motorbike'
-
-            # mostra retangulo com corner customizado
+            # Display a rectangle with customized corners.
             cvzone.cornerRect(frame, (x1, x2, w, h), l=10, t=4)
             cvzone.putTextRect(frame,
                                f'{LABELS[int(class_id)]}',
@@ -63,21 +58,21 @@ def main():
         print("[INFO] classification time " + str((end - start) * 1000) + "ms")
 
         # draw roi
-        # output_frame = draw_roi(frame, points_polygon)
+        output_frame = draw_roi(frame, points_polygon)
         # resized = imutils.resize(frame, width=1200)
 
-        # save the video with detections
-        if writer is None:
-            fourcc = cv2.VideoWriter_fourcc(*"XVID")
-            writer = cv2.VideoWriter('yolov8.avi', fourcc, 20, (frame.shape[1], frame.shape[0]), True)
-        writer.write(frame)
+        # # save the video with detections
+        # if writer is None:
+        #     fourcc = cv2.VideoWriter_fourcc(*"XVID")
+        #     writer = cv2.VideoWriter('yolov8.avi', fourcc, 10, (frame.shape[1], frame.shape[0]), True)
+        # writer.write(output_frame)
 
         # show the output
-        cv2.imshow('Frame', frame)
+        cv2.imshow('Frame', output_frame)
         key = cv2.waitKey(1) & 0xFF
 
         # if key == ord('k'):
-        #     cv2.imwrite("DN5005B.jpg", output_frame)
+        #     cv2.imwrite("yolovB.jpg", output_frame)
 
         # stop the frame
         if key == ord('q'):
