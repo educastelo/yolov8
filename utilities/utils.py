@@ -4,12 +4,12 @@ import cv2
 import numpy as np
 
 
-def point_in_polygons(points, poligons):
-    ponto = Point(points)
+def point_in_polygons(points, list_polygons):
+    point = Point(points)
 
-    for poligono in poligons:
-        polygon = Polygon(poligono)
-        if polygon.contains(ponto):
+    for i in list_polygons:
+        polygon = Polygon(i)
+        if polygon.contains(point):
             return True
     return False
 
@@ -20,7 +20,7 @@ def draw_roi(frame, polygons):
         cv2.fillPoly(
             frame_overlay,
             np.array([polygon], dtype=np.int32),
-            (0, 0, 255)
+            (0, 127, 127)
         )
 
     alpha = 0.2

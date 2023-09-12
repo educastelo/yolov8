@@ -130,3 +130,5 @@ dmypy.json
 
 models/*pt
 ./cound.db
+*avi
+output/*.avi

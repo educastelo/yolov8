@@ -7,18 +7,16 @@ from utilities.utils import point_in_polygons, draw_roi
 from tracker.centroid import CentroidTracker
 
 # setting the ROI (polygon) of the frame and loading the video stream
-points_polygon = [[[494, 244], [733, 716], [1275, 294], [926, 108], [498, 242]]]
-stream = u"rtmp://"
+points_polygon = [[[247, 298], [201, 679], [1112, 679], [1020, 294], [248, 296]]]
+stream = u"rtsp://targetpoint:A9d$5(oo!p@199.91.77.138:554/axis-media/media.amp"
 
 # instantiate our centroid tracker, then initialize a list to store
 # each of our dlib correlation trackers, followed by a dictionary to
 # map each unique object ID to a TrackableObject
 ct = CentroidTracker(maxDisappeared=2, maxDistance=400)
-trackers = []
-trackableObjects = {}
 
 # load the model and the COCO class labels our YOLO model was trained on
-model = YOLO("models/yolov8x.pt")  # escolher o modelo de acordo com a necessidade
+model = YOLO("models/yolov8m.pt")  # escolher o modelo de acordo com a necessidade
 labelsPath = os.path.sep.join(["coco", "coco.names"])
 LABELS = open(labelsPath).read().strip().split("\n")
 

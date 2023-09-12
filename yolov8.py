@@ -7,11 +7,11 @@ from ultralytics import YOLO
 from utilities.utils import point_in_polygons, draw_roi
 
 # setting the ROI (polygon) of the frame and loading the video stream
-points_polygon = [[[247, 298], [201, 679], [1112, 679], [1020, 294], [248, 296]]]
-stream = u'rtsp...'
+points_polygon = [[[64, 223], [681, 715], [1172, 353], [506, 60], [67, 221]]]
+stream = u'rtsp_mooh03.avi'
 
 # load the model and the COCO class labels our YOLO model was trained on
-model = YOLO("models/yolov8m.pt")
+model = YOLO("models/yolov8x.pt")
 labelsPath = os.path.sep.join(["coco", "coco.names"])
 LABELS = open(labelsPath).read().strip().split("\n")
 
@@ -25,7 +25,7 @@ def main():
     writer = None
     # pass the frame to the yolov8 model
     for result in model(source=stream, verbose=False, stream=True, show=False, classes=[0, 1, 2, 3, 5, 7],
-                        conf=0.3, agnostic_nms=True):
+                        conf=0.2, agnostic_nms=True):
         start = time.time()
         frame = result.orig_img
 
@@ -44,6 +44,9 @@ def main():
             if not point_in_polygons((cX, cY), points_polygon):
                 continue
 
+            # if class_id == 0:
+            #     class_id = 3
+
             # Display a rectangle with customized corners.
             cvzone.cornerRect(frame, (x1, x2, w, h), l=10, t=4)
             cvzone.putTextRect(frame,
@@ -61,11 +64,11 @@ def main():
         output_frame = draw_roi(frame, points_polygon)
         # resized = imutils.resize(frame, width=1200)
 
-        # # save the video with detections
-        # if writer is None:
-        #     fourcc = cv2.VideoWriter_fourcc(*"XVID")
-        #     writer = cv2.VideoWriter('yolov8.avi', fourcc, 10, (frame.shape[1], frame.shape[0]), True)
-        # writer.write(output_frame)
+        # save the video with detections
+        if writer is None:
+            fourcc = cv2.VideoWriter_fourcc(*"XVID")
+            writer = cv2.VideoWriter('output/rtsp_mooh03.avi', fourcc, 20, (frame.shape[1], frame.shape[0]), True)
+        writer.write(output_frame)
 
         # show the output
         cv2.imshow('Frame', output_frame)
