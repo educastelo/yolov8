@@ -7,8 +7,8 @@ from ultralytics import YOLO
 from utilities.utils import point_in_polygons, draw_roi
 
 # setting the ROI (polygon) of the frame and loading the video stream
-points_polygon = [[[64, 223], [681, 715], [1172, 353], [506, 60], [67, 221]]]
-stream = u'rtsp_mooh03.avi'
+points_polygon = [[[426, 284], [720, 707], [1260, 573], [727, 266], [423, 281]]]
+stream = u'videos/trend_mascarenhas-20_10.avi'
 
 # load the model and the COCO class labels our YOLO model was trained on
 model = YOLO("models/yolov8x.pt")
@@ -25,7 +25,7 @@ def main():
     writer = None
     # pass the frame to the yolov8 model
     for result in model(source=stream, verbose=False, stream=True, show=False, classes=[0, 1, 2, 3, 5, 7],
-                        conf=0.2, agnostic_nms=True):
+                        conf=0.3, agnostic_nms=True):
         start = time.time()
         frame = result.orig_img
 
@@ -38,11 +38,12 @@ def main():
             score = float(r.conf[0])
             w, h = x3 - x1, x4 - x2
 
-            # Check if the centroid of each object is inside the polygon
-            cX = (x1 + x3) / 2
-            cY = (x2 + x4) / 2
-            if not point_in_polygons((cX, cY), points_polygon):
-                continue
+            if points_polygon is not None:
+                # Check if the centroid of each object is inside the polygon
+                cX = (x1 + x3) / 2
+                cY = (x2 + x4) / 2
+                if not point_in_polygons((cX, cY), points_polygon):
+                    continue
 
             # if class_id == 0:
             #     class_id = 3
@@ -61,14 +62,15 @@ def main():
         print("[INFO] classification time " + str((end - start) * 1000) + "ms")
 
         # draw roi
-        output_frame = draw_roi(frame, points_polygon)
+        output_frame = frame if points_polygon is None else draw_roi(frame, points_polygon)
+        # output_frame = frame
         # resized = imutils.resize(frame, width=1200)
 
-        # save the video with detections
-        if writer is None:
-            fourcc = cv2.VideoWriter_fourcc(*"XVID")
-            writer = cv2.VideoWriter('output/rtsp_mooh03.avi', fourcc, 20, (frame.shape[1], frame.shape[0]), True)
-        writer.write(output_frame)
+        # # save the video with detections
+        # if writer is None:
+        #     fourcc = cv2.VideoWriter_fourcc(*"XVID")
+        #     writer = cv2.VideoWriter('output/trend_mascarenhas-20_10.avi', fourcc, 20, (frame.shape[1], frame.shape[0]), True)
+        # writer.write(output_frame)
 
         # show the output
         cv2.imshow('Frame', output_frame)
