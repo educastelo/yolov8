@@ -6,9 +6,22 @@ from ultralytics import YOLO
 from utilities.utils import point_in_polygons, draw_roi
 from tracker.centroid import CentroidTracker
 
+classNames = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
+              "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
+              "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
+              "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat",
+              "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup",
+              "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli",
+              "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed",
+              "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone",
+              "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors",
+              "teddy bear", "hair drier", "toothbrush"
+              ]
+
 # setting the ROI (polygon) of the frame and loading the video stream
 points_polygon = [[[247, 298], [201, 679], [1112, 679], [1020, 294], [248, 296]]]
-stream = u"rtsp://targetpoint:A9d$5(oo!p@199.91.77.138:554/axis-media/media.amp"
+stream_name = "arquivo.avi"
+cap = f'raw-videos/{stream_name}'
 
 # instantiate our centroid tracker, then initialize a list to store
 # each of our dlib correlation trackers, followed by a dictionary to
@@ -16,17 +29,14 @@ stream = u"rtsp://targetpoint:A9d$5(oo!p@199.91.77.138:554/axis-media/media.amp"
 ct = CentroidTracker(maxDisappeared=2, maxDistance=400)
 
 # load the model and the COCO class labels our YOLO model was trained on
-model = YOLO("models/yolov8m.pt")  # escolher o modelo de acordo com a necessidade
-labelsPath = os.path.sep.join(["coco", "coco.names"])
-LABELS = open(labelsPath).read().strip().split("\n")
-
-writer = None
+model = YOLO("models/yolov8n.pt")  # escolher o modelo de acordo com a necessidade
 
 
 def main():
+    writer = None
     # Stream is online, so proceed with reading the frames
-    for result in model(source=stream, verbose=False, max_det=200, stream=True, show=False,
-                        conf=0.3, agnostic_nms=True, classes=[0, 1, 2, 3, 5, 7]):
+    for result in model(source=cap, verbose=False, max_det=200, stream=True, show=False,
+                        conf=0.3, agnostic_nms=True, classes=[0, 1, 2, 3, 5, 7], iou=0.5):
         frame = result.orig_img
         boxes = result.boxes
         rects = []
@@ -40,16 +50,17 @@ def main():
             score = float(r.conf[0])
             w, h = x3 - x1, x4 - x2
 
-            # Check if the centroid of each object is inside the polygon
-            cX = (x1 + x3) / 2
-            cY = (x2 + x4) / 2
-            if not point_in_polygons((cX, cY), points_polygon):
-                continue
+            if points_polygon is not None:
+                # Check if the centroid of each object is inside the polygon
+                cX = (x1 + x3) / 2
+                cY = (x2 + x4) / 2
+                if not point_in_polygons((cX, cY), points_polygon):
+                    continue
 
             # draw a bounding box rectangle and label on the frame
             cvzone.cornerRect(frame, (x1, x2, w, h), l=10, t=4)
             cvzone.putTextRect(frame,
-                               f'{LABELS[int(class_id)]}',
+                               f'{classNames[class_id]}',
                                (max(0, x1), max(35, x2)),
                                scale=0.5, thickness=1, colorR=(224, 182, 90),
                                colorT=(40, 40, 40),
@@ -57,7 +68,7 @@ def main():
                                offset=5)
 
             rects.append([x1, x2, x3, x4])
-            classDetected_list.append(LABELS[class_id])
+            classDetected_list.append(classNames[class_id])
             confDegree_list.append(score)
 
         # update our centroid tracker using the computed set of bounding
@@ -74,13 +85,15 @@ def main():
             cv2.circle(frame, (centroid[0], centroid[1]), 4, (0, 255, 0), - 1)
 
         # draw roi
-        output_frame = draw_roi(frame, points_polygon)
+        output_frame = frame if points_polygon is None else draw_roi(frame, points_polygon)
+
+        # Resize the frame to show on the screen
         resized = imutils.resize(output_frame, width=1200)
 
-        # # save the video with detections
+        # # Uncomment to save the output video
         # if writer is None:
         #     fourcc = cv2.VideoWriter_fourcc(*"XVID")
-        #     writer = cv2.VideoWriter('yolov8.avi', fourcc, 10, (frame.shape[1], frame.shape[0]), True)
+        #     writer = cv2.VideoWriter(f'output/{stream_name}', fourcc, 10, (frame.shape[1], frame.shape[0]), True)
         # writer.write(output_frame)
 
         # show the output

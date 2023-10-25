@@ -6,26 +6,32 @@ import cvzone
 from ultralytics import YOLO
 from utilities.utils import point_in_polygons, draw_roi
 
+classNames = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
+              "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
+              "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
+              "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat",
+              "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup",
+              "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli",
+              "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed",
+              "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone",
+              "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors",
+              "teddy bear", "hair drier", "toothbrush"
+              ]
+
 # setting the ROI (polygon) of the frame and loading the video stream
-points_polygon = [[[426, 284], [720, 707], [1260, 573], [727, 266], [423, 281]]]
-stream = u'videos/trend_mascarenhas-20_10.avi'
+points_polygon = [[[247, 298], [201, 679], [1112, 679], [1020, 294], [248, 296]]]
+stream_name = "arquivo.avi"
+cap = f'raw-videos/{stream_name}'
 
 # load the model and the COCO class labels our YOLO model was trained on
 model = YOLO("models/yolov8x.pt")
-labelsPath = os.path.sep.join(["coco", "coco.names"])
-LABELS = open(labelsPath).read().strip().split("\n")
-
-# initialize a list of colors to represent each possible class label
-np.random.seed(42)
-COLORS = np.random.randint(0, 255, size=(len(LABELS), 3),
-                           dtype="uint8")
 
 
 def main():
     writer = None
     # pass the frame to the yolov8 model
-    for result in model(source=stream, verbose=False, stream=True, show=False, classes=[0, 1, 2, 3, 5, 7],
-                        conf=0.3, agnostic_nms=True):
+    for result in model(source=cap, verbose=False, stream=True, show=False, classes=[0, 1, 2, 3, 5, 7],
+                        conf=0.3, agnostic_nms=True, iou=0.5):
         start = time.time()
         frame = result.orig_img
 
@@ -45,13 +51,10 @@ def main():
                 if not point_in_polygons((cX, cY), points_polygon):
                     continue
 
-            # if class_id == 0:
-            #     class_id = 3
-
             # Display a rectangle with customized corners.
             cvzone.cornerRect(frame, (x1, x2, w, h), l=10, t=4)
             cvzone.putTextRect(frame,
-                               f'{LABELS[int(class_id)]}',
+                               f'{classNames[class_id]}',
                                (max(0, x1), max(35, x2)),
                                scale=0.5, thickness=1, colorR=(224, 182, 90),
                                colorT=(40, 40, 40),
@@ -64,16 +67,18 @@ def main():
         # draw roi
         output_frame = frame if points_polygon is None else draw_roi(frame, points_polygon)
         # output_frame = frame
-        # resized = imutils.resize(frame, width=1200)
 
-        # # save the video with detections
-        # if writer is None:
-        #     fourcc = cv2.VideoWriter_fourcc(*"XVID")
-        #     writer = cv2.VideoWriter('output/trend_mascarenhas-20_10.avi', fourcc, 20, (frame.shape[1], frame.shape[0]), True)
-        # writer.write(output_frame)
+        # Resize the frame to show on the screen
+        resized = cv2.resize(frame, (1200, int(output_frame.shape[0] * 1200 / output_frame.shape[1])))
+
+        # save the video with detections
+        if writer is None:
+            fourcc = cv2.VideoWriter_fourcc(*"XVID")
+            writer = cv2.VideoWriter('output/adwall03.avi', fourcc, 15, (frame.shape[1], frame.shape[0]), True)
+        writer.write(output_frame)
 
         # show the output
-        cv2.imshow('Frame', output_frame)
+        cv2.imshow('Frame', resized)
         key = cv2.waitKey(1) & 0xFF
 
         # if key == ord('k'):
