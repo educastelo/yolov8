@@ -4,7 +4,7 @@ import imutils
 import cvzone
 from ultralytics import YOLO
 from utilities.utils import point_in_polygons, draw_roi
-from tracker.centroid import CentroidTracker
+from tracker.centroidtracker import CentroidTracker
 
 classNames = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
               "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
