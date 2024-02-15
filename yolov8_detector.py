@@ -19,9 +19,9 @@ classNames = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "trai
               ]
 
 # setting the ROI (polygon) of the frame and loading the video stream
-points_polygon = [[[247, 298], [201, 679], [1112, 679], [1020, 294], [248, 296]]]
-stream_name = "arquivo.avi"
-cap = f'raw-videos/{stream_name}'
+points_polygon = None
+stream_name = "arquivo"
+cap = f'videos/{stream_name}.avi'
 
 # load the model and the COCO class labels our YOLO model was trained on
 model = YOLO("models/yolov8x.pt")
@@ -65,8 +65,8 @@ def main():
         print("[INFO] classification time " + str((end - start) * 1000) + "ms")
 
         # draw roi
-        output_frame = frame if points_polygon is None else draw_roi(frame, points_polygon)
-        # output_frame = frame
+        # output_frame = frame if points_polygon is None else draw_roi(frame, points_polygon)
+        output_frame = frame
 
         # Resize the frame to show on the screen
         resized = cv2.resize(frame, (1200, int(output_frame.shape[0] * 1200 / output_frame.shape[1])))
@@ -74,7 +74,8 @@ def main():
         # save the video with detections
         if writer is None:
             fourcc = cv2.VideoWriter_fourcc(*"XVID")
-            writer = cv2.VideoWriter('output/adwall03.avi', fourcc, 15, (frame.shape[1], frame.shape[0]), True)
+            writer = cv2.VideoWriter(f'output/{stream_name}.avi', fourcc, 10, (frame.shape[1], frame.shape[0]), True)
+
         writer.write(output_frame)
 
         # show the output
