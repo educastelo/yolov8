@@ -132,3 +132,4 @@ models/*pt
 ./cound.db
 *avi
 output/*.avi
+*db

@@ -1,6 +1,5 @@
 import os
 import cv2
-import imutils
 import cvzone
 from ultralytics import YOLO
 from utilities.utils import point_in_polygons, draw_roi
@@ -19,24 +18,24 @@ classNames = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "trai
               ]
 
 # setting the ROI (polygon) of the frame and loading the video stream
-points_polygon = [[[247, 298], [201, 679], [1112, 679], [1020, 294], [248, 296]]]
+points_polygon = [[[664, 208], [827, 103], [990, 184], [825, 333], [666, 209]]]
 stream_name = "arquivo.avi"
 cap = f'raw-videos/{stream_name}'
 
 # instantiate our centroid tracker, then initialize a list to store
 # each of our dlib correlation trackers, followed by a dictionary to
 # map each unique object ID to a TrackableObject
-ct = CentroidTracker(maxDisappeared=2, maxDistance=400)
+ct = CentroidTracker(maxDisappeared=1, maxDistance=200)
 
 # load the model and the COCO class labels our YOLO model was trained on
-model = YOLO("models/yolov8n.pt")  # escolher o modelo de acordo com a necessidade
+model = YOLO("models/yolov8x.pt")  # escolher o modelo de acordo com a necessidade
 
 
 def main():
     writer = None
     # Stream is online, so proceed with reading the frames
     for result in model(source=cap, verbose=False, max_det=200, stream=True, show=False,
-                        conf=0.3, agnostic_nms=True, classes=[0, 1, 2, 3, 5, 7], iou=0.5):
+                        conf=0.1, agnostic_nms=True, classes=[0, 1, 2, 3, 5, 7], iou=0.5):
         frame = result.orig_img
         boxes = result.boxes
         rects = []
@@ -88,7 +87,7 @@ def main():
         output_frame = frame if points_polygon is None else draw_roi(frame, points_polygon)
 
         # Resize the frame to show on the screen
-        resized = imutils.resize(output_frame, width=1200)
+        resized = cv2.resize(output_frame, (1200, int(output_frame.shape[0] * 1200 / output_frame.shape[1])))
 
         # # Uncomment to save the output video
         # if writer is None:

@@ -19,7 +19,7 @@ classNames = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "trai
               ]
 
 # setting the ROI (polygon) of the frame and loading the video stream
-points_polygon = None
+points_polygon = [[[664, 208], [827, 103], [990, 184], [825, 333], [666, 209]]]
 stream_name = "arquivo"
 cap = f'videos/{stream_name}.avi'
 
@@ -31,7 +31,7 @@ def main():
     writer = None
     # pass the frame to the yolov8 model
     for result in model(source=cap, verbose=False, stream=True, show=False, classes=[0, 1, 2, 3, 5, 7],
-                        conf=0.3, agnostic_nms=True, iou=0.5):
+                        conf=0.1, agnostic_nms=True, iou=0.5):
         start = time.time()
         frame = result.orig_img
 
@@ -65,11 +65,11 @@ def main():
         print("[INFO] classification time " + str((end - start) * 1000) + "ms")
 
         # draw roi
-        # output_frame = frame if points_polygon is None else draw_roi(frame, points_polygon)
-        output_frame = frame
+        output_frame = frame if points_polygon is None else draw_roi(frame, points_polygon)
+        # output_frame = frame
 
         # Resize the frame to show on the screen
-        resized = cv2.resize(frame, (1200, int(output_frame.shape[0] * 1200 / output_frame.shape[1])))
+        resized = cv2.resize(output_frame, (1200, int(output_frame.shape[0] * 1200 / output_frame.shape[1])))
 
         # save the video with detections
         if writer is None:
