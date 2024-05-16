@@ -1,11 +1,11 @@
 from shapely.geometry.polygon import Polygon
-from shapely.geometry import Point
+from shapely.geometry import PT
 import cv2
 import numpy as np
 
 
 def point_in_polygons(points, list_polygons):
-    point = Point(points)
+    point = PT(points)
 
     for i in list_polygons:
         polygon = Polygon(i)
